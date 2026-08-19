@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="1024" height="1536" viewBox="0 0 1024 1536">
+  <defs>
+    <linearGradient id="main" x1="0.15" y1="0.05" x2="0.82" y2="0.95">
+      <stop offset="0%" stop-color="#16DDD4"/>
+      <stop offset="52%" stop-color="#08C9C5"/>
+      <stop offset="100%" stop-color="#00A8D8"/>
+    </linearGradient>
+    <linearGradient id="fold" x1="0.15" y1="0.05" x2="0.82" y2="0.95">
+      <stop offset="0%" stop-color="#0BB9B8"/>
+      <stop offset="60%" stop-color="#079FA9"/>
+      <stop offset="100%" stop-color="#008DA7"/>
+    </linearGradient>
+  </defs>
+  <path d="M 470 60
+C 470 28 492 8 518 8
+C 540 8 553 20 568 40
+C 615 104 668 140 735 181
+C 846 249 930 326 969 432
+C 998 512 997 606 974 694
+C 952 779 910 848 843 907
+C 864 844 868 786 852 736
+C 833 676 791 630 732 587
+L 585 479
+L 585 1050
+C 585 1250 449 1420 260 1454
+C 80 1486 -47 1357 7 1179
+C 49 1041 180 948 321 953
+C 377 955 428 970 470 998
+Z" fill="url(#main)"/>
+  <path d="M 470 176
+C 497 245 548 302 611 348
+C 667 389 731 421 791 463
+C 852 506 892 559 902 622
+C 914 698 889 787 843 907
+C 864 844 868 786 852 736
+C 833 676 791 630 732 587
+L 585 479
+C 531 439 494 396 470 352
+Z" fill="url(#fold)"/>
+</svg>
