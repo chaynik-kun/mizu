@@ -65,7 +65,7 @@ Mizu is designed to feel at home on Android while still letting you make it your
 You can customize:
 
 * Application color style
-* Material You dynamic colors
+* Material You dynamic colors (Android 13+)
 * Light / dark appearance
 * Launcher icon style
 * Player appearance
@@ -93,14 +93,6 @@ When reporting a playback-related bug, please include when possible:
 * Relevant logs without passwords, tokens or authenticated URLs
 
 For UI and localization issues, screenshots are especially helpful.
-
-## 🛡️ Privacy
-
-Mizu connects directly to the music server configured by the user.
-
-Mizu does not require a Mizu account or subscription.
-
-Never include your server credentials, authentication tokens or private server URLs when posting logs publicly.
 
 ## ❤️ Credits
 
