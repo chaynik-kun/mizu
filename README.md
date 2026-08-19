@@ -21,6 +21,7 @@ Mizu is an open-source music player for Android, focused on a clean interface, r
 * 📺 DLNA / UPnP playback
 * 🚗 Android Auto support
 * 📥 Music downloads and offline playback
+* 💾 Automatic music caching for faster repeat playback
 * ⚡ Pre-buffering for smoother track transitions
 * 🎨 Material You dynamic colors (Android 12+)
 * 🖌️ Multiple built-in Mizu color styles
