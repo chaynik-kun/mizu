@@ -31,9 +31,19 @@ Mizu is an open-source music player for Android, focused on a clean interface, r
 * 🌍 Extensive localization
 * ↔️ Full RTL support, including Arabic and Hebrew
 
-## Screenshots
+## 📸 Screenshots
 
-Soon
+<p align="center">
+  <img src="assets/screenshots/home.png" width="19%" />
+  <img src="assets/screenshots/now-playing.png" width="19%" />
+  <img src="assets/screenshots/lyrics.png" width="19%" />
+  <img src="assets/screenshots/artist.png" width="19%" />
+  <img src="assets/screenshots/settings.png" width="19%" />
+</p>
+
+<p align="center">
+  <sub>Home · Now Playing · Synchronized Lyrics · Artist · Customization</sub>
+</p>
 
 ## Languages
 
