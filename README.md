@@ -1,8 +1,6 @@
 # Mizu
 
-**A fast, modern and customizable music client for **[Navidrome](https://github.com/navidrome/navidrome)** and OpenSubsonic-compatible servers.**
-
-
+**A fast, modern and customizable music client for [Navidrome](https://github.com/navidrome/navidrome) and OpenSubsonic-compatible servers.**
 
 Based on **[Navic](https://github.com/ssalggnikool/Navic)**
 
@@ -27,6 +25,7 @@ Mizu is an open-source Android music player focused on a clean interface, respon
 * 🎧 Audio Offload support
 * 📊 Scrobbling support
 * 🌍 Extensive localization
+* ↔️ Full RTL support, including Arabic and Hebrew
 
 ## 📸 Screenshots
 
@@ -42,8 +41,7 @@ Some regional locales use Android's standard locale fallback where appropriate.
 
 Translations are continuously reviewed and improvements are welcome.
 
-
-## 🖥️ Server compatibility
+## 🖥️ Server Compatibility
 
 Mizu is designed primarily for **Navidrome** and uses the OpenSubsonic/Subsonic ecosystem.
 
@@ -71,9 +69,9 @@ If you find a bug, have an idea, want to improve a translation or would like to 
 
 Before making large architectural changes, please open an Issue first so the approach can be discussed.
 
-## 🐛 Bug reports
+## 🐛 Bug Reports
 
-When reporting a playback-related bug, please include when possible:
+When reporting a playback-related bug, please include, when possible:
 
 * Android version
 * Device model
@@ -91,16 +89,10 @@ Mizu is based on **[Navic](https://github.com/ssalggnikool/Navic)** and builds u
 
 The project has since been expanded with additional playback functionality, customization, casting, equalizer support, Android Auto integration, localization improvements and other features.
 
-See `ACKNOWLEDGEMENTS.md` for additional attribution and project history.
+See [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md) for additional attribution and project history.
 
 ## 📄 License
 
 Mizu is free and open-source software licensed under the **GNU General Public License v3.0 (GPL-3.0)**.
 
-See `LICENSE` for the full license text.
-
----
-
-### Mizu
-
-**Your server. Your library. Your music.**
+See [LICENSE](LICENSE) for the full license text.
