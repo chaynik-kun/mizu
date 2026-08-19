@@ -1,4 +1,8 @@
-# Mizu
+<p align="center">
+  <img src="assets/mizu-original.svg" width="140" alt="Mizu logo">
+</p>
+
+<h1 align="center">Mizu</h1>
 
 **A fast, modern and customizable music client for [Navidrome](https://github.com/navidrome/navidrome) and OpenSubsonic-compatible servers.**
 
