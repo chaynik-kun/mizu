@@ -6,7 +6,7 @@ Based on **[Navic](https://github.com/ssalggnikool/Navic)**
 
 Mizu is an open-source music player for Android, focused on a clean interface, responsive playback, customization and a great self-hosted music experience.
 
-## ✨ Features
+## Features
 
 * 🎵 Navidrome / OpenSubsonic-compatible server support
 * ▶️ Fast and responsive music playback
@@ -27,11 +27,11 @@ Mizu is an open-source music player for Android, focused on a clean interface, r
 * 🌍 Extensive localization
 * ↔️ Full RTL support, including Arabic and Hebrew
 
-## 📸 Screenshots
+## Screenshots
 
 Soon
 
-## 🌍 Languages
+## Languages
 
 Mizu includes localization support for:
 
@@ -41,13 +41,13 @@ Some regional locales use Android's standard locale fallback where appropriate.
 
 Translations are continuously reviewed and improvements are welcome.
 
-## 🖥️ Server Compatibility
+## Server Compatibility
 
 Mizu is designed primarily for **[Navidrome](https://github.com/navidrome/navidrome)** and uses the OpenSubsonic/Subsonic ecosystem.
 
 Compatibility with other OpenSubsonic-compatible servers may vary.
 
-## 🎨 Customization
+## Customization
 
 Mizu is designed to feel at home on Android while still letting you make it yours.
 
@@ -61,7 +61,7 @@ You can customize:
 
 Material You and launcher icon customization are independent, so you can use Android system colors without giving up your preferred Mizu icon.
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome.
 
@@ -69,7 +69,7 @@ If you find a bug, have an idea, want to improve a translation or would like to 
 
 Before making large architectural changes, please open an Issue first so the approach can be discussed.
 
-## 🐛 Bug Reports
+## Bug Reports
 
 When reporting a playback-related bug, please include, when possible:
 
@@ -83,7 +83,7 @@ When reporting a playback-related bug, please include, when possible:
 
 For UI and localization issues, screenshots are especially helpful.
 
-## 🗺️ Roadmap
+## Roadmap
 
 Mizu 1.0 focuses on delivering a stable, fast and polished music experience.
 
@@ -106,7 +106,7 @@ Planned improvements include:
 
 > The roadmap may change as Mizu evolves.
 
-## ❤️ Credits
+## Credits
 
 Mizu is based on **[Navic](https://github.com/ssalggnikool/Navic)** and builds upon the work of its original developers and contributors.
 
@@ -114,7 +114,7 @@ The project has since been expanded with additional playback functionality, cust
 
 See [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md) for additional attribution and project history.
 
-## 📄 License
+## License
 
 Mizu is free and open-source software licensed under the **GNU General Public License v3.0 (GPL-3.0)**.
 
