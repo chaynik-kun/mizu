@@ -104,7 +104,7 @@ Never include your server credentials, authentication tokens or private server U
 
 ## ❤️ Credits
 
-Mizu is based on **Navic** and builds upon the work of its original developers and contributors.
+Mizu is based on **[Navic](https://github.com/ssalggnikool/Navic)** and builds upon the work of its original developers and contributors.
 
 The project has since been expanded with additional playback functionality, customization, casting, equalizer support, Android Auto integration, localization improvements and other features.
 
