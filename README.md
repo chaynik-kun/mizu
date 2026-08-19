@@ -42,7 +42,7 @@ Mizu is an open-source music player for Android, focused on a clean interface, r
 </p>
 
 <p align="center">
-  <sub>Home · Now Playing · Synchronized Lyrics · Artist · Customization</sub>
+  <sub>Home · Now Playing · Lyrics · Artist Page · Settings</sub>
 </p>
 
 ## Languages
