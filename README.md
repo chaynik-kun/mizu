@@ -110,6 +110,7 @@ Planned improvements include:
 * More lyrics and metadata providers
 * Performance and memory optimizations
 * Better caching and offline playback
+* Advanced download manager
 * Playback improvements
 * Improved Android Auto support
 * Cast, DLNA and UPnP improvements
