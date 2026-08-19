@@ -1,6 +1,8 @@
 # Mizu
 
-**A fast, modern and customizable music client for Navidrome and OpenSubsonic-compatible servers.**
+**A fast, modern and customizable music client for **[Navidrome](https://github.com/navidrome/navidrome)** and OpenSubsonic-compatible servers.**
+
+
 
 Based on **[Navic](https://github.com/ssalggnikool/Navic)**
 
