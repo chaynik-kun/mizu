@@ -4,7 +4,7 @@
 
 Based on **[Navic](https://github.com/ssalggnikool/Navic)**
 
-Mizu is an open-source Android music player focused on a clean interface, responsive playback, customization and a great self-hosted music experience.
+Mizu is an open-source music player for Android, focused on a clean interface, responsive playback, customization and a great self-hosted music experience.
 
 ## ✨ Features
 
@@ -43,7 +43,7 @@ Translations are continuously reviewed and improvements are welcome.
 
 ## 🖥️ Server Compatibility
 
-Mizu is designed primarily for **Navidrome** and uses the OpenSubsonic/Subsonic ecosystem.
+Mizu is designed primarily for **[Navidrome](https://github.com/navidrome/navidrome)** and uses the OpenSubsonic/Subsonic ecosystem.
 
 Compatibility with other OpenSubsonic-compatible servers may vary.
 
@@ -82,6 +82,29 @@ When reporting a playback-related bug, please include, when possible:
 * Relevant logs without passwords, tokens or authenticated URLs
 
 For UI and localization issues, screenshots are especially helpful.
+
+## 🗺️ Roadmap
+
+Mizu 1.0 focuses on delivering a stable, fast and polished music experience.
+
+Future development will focus on improving Mizu while keeping it fast, simple and easy to contribute to.
+
+Planned improvements include:
+
+* More modular architecture
+* Plugin and extension support
+* More lyrics and metadata providers
+* Performance and memory optimizations
+* Better caching and offline playback
+* Playback improvements
+* Improved Android Auto support
+* Cast, DLNA and UPnP improvements
+* More customization options
+* Accessibility improvements
+* More languages and localization improvements
+* Better documentation for contributors
+
+> The roadmap may change as Mizu evolves.
 
 ## ❤️ Credits
 
