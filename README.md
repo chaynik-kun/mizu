@@ -10,6 +10,8 @@ Based on **[Navic](https://github.com/ssalggnikool/Navic)**
 
 Mizu is an open-source music player for Android, focused on a clean interface, responsive playback, customization and a great self-hosted music experience.
 
+Discord server: https://discord.gg/yMjXp6x4E5
+
 ## Features
 
 * 🎵 Navidrome / OpenSubsonic-compatible server support
