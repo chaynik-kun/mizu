@@ -2,58 +2,72 @@
 
 ### What's allowed
 
-* LLM-assisted contributions are **allowed**
-* Typo contributions are **allowed**
-* Code cleaning contributions are **allowed**
+* LLM-assisted contributions are allowed
+* Typo and translation fixes are welcome
+* Code cleanup and refactoring are welcome
+* Bug fixes and performance improvements are welcome
+* New features are welcome, but please open an Issue before making large architectural changes
+
+LLM-assisted contributions are held to the same standards as any other contribution.
+Please review, understand, and test generated code before submitting it.
 
 ### Conventions
 
 * Format your code
-* Test your changes, ensure UI is correct on different themes and form factors
-* Include a screenshot for UI changes
-* Keep PRs focused, create separate PRs for unrelated changes
-* Use [conventional commits](https://conventionalcommits.org/)
+* Test your changes before opening a PR
+* Keep PRs focused; use separate PRs for unrelated changes
+* Include screenshots or screen recordings for UI changes
+* Test UI changes in both light and dark themes where applicable
+* Check RTL layouts when changing shared UI components
+* Do not hardcode user-facing strings; use localized resources
+* Do not commit build outputs, local configuration, credentials, tokens, keystores, or other secrets
+* Use [Conventional Commits](https://www.conventionalcommits.org/)
 * Use [conventional branch names](https://conventional-branch.github.io/)
+
+For playback-related changes, test normal playback, queue navigation, shuffle/repeat behavior, seeking, and track transitions where relevant.
+
+For localization-related changes, make sure the default English resources remain complete and that changes do not introduce missing or incorrectly falling-back strings.
 
 ## Contributing
 
 ### Structure overview
 
-This project is structured like most Compose Multiplatform apps are.
+Mizu is an Android music client built primarily with Kotlin and Jetpack Compose.
+
+The repository contains two main modules:
 
 #### Modules
 
-| Module       | Description                                                                                       |
-|--------------|---------------------------------------------------------------------------------------------------|
-| `composeApp` | Shared application code, Android implementations, resources, and host tests. |
-| `androidApp` | Android entry point, manifest, widgets, launcher assets, and platform resources. |
+| Module | Description |
+|--------|-------------|
+| `composeApp` | Main application code, Compose UI, data/domain layers, Android implementations, resources, and tests. |
+| `androidApp` | Android application entry point, manifest, widgets, launcher assets, and platform-specific resources. |
 
 #### Packages
 
-| Package              | Description                                                    |
-|----------------------|----------------------------------------------------------------|
-| `chaynik.mizu.data`   | Database entities, data access, and repositories.                 |
-| `chaynik.mizu.domain` | Application models, managers, and repository interfaces.          |
-| `chaynik.mizu.shared` | Android media and playback integration.                            |
-| `chaynik.mizu.ui`     | Compose screens, components, navigation, and theming.              |
-| `chaynik.mizu.util`   | Focused core and UI utilities.                                     |
+| Package | Description |
+|---------|-------------|
+| `chaynik.mizu.data` | Database entities, data access, and repositories. |
+| `chaynik.mizu.domain` | Application models, managers, and repository interfaces. |
+| `chaynik.mizu.shared` | Android media and playback integration. |
+| `chaynik.mizu.ui` | Compose screens, components, navigation, and theming. |
+| `chaynik.mizu.util` | Focused core and UI utilities. |
 
-#### Resources
+### Resources
 
-Strings, fonts and other things are in `composeApp/src/commonMain/composeResources`
+Strings, fonts, and other Compose resources are located in:
 
-SVG icons are in `composeApp/src/commonMain/valkyrieResources`. Run
-`./gradlew :generateValkyrieImageVector` to regenerate code for these
-icons. Access them in code using `Icons.<Category>.<Icon>`
+`composeApp/src/commonMain/composeResources`
 
-Most icons are sourced from [Material Symbols](https://fonts.google.com/icons)
-**with the rounded variant.**
+User-facing text should use localized string resources rather than hardcoded strings.
 
-### Environment
+When modifying shared UI, keep both LTR and RTL layouts in mind. Arabic and Hebrew are supported RTL locales and should not require separate UI workarounds.
 
-You will need:
+SVG icon sources are located in:
 
-* Android Studio
-	* You can use [JetBrains Toolbox](https://www.jetbrains.com/toolbox-app/) to get this
-* JDK 21
-* Android SDK matching the compile SDK declared in `gradle/libs.versions.toml`
+`composeApp/src/commonMain/valkyrieResources`
+
+Run:
+
+```sh
+./gradlew :generateValkyrieImageVector
