@@ -1,0 +1,47 @@
+package chaynik.mizu.ui.components.common
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+
+@Composable
+fun ContentUnavailable(
+	modifier: Modifier = Modifier.fillMaxSize(),
+	icon: ImageVector,
+	label: String,
+	color: Color = MaterialTheme.colorScheme.onSurface
+) {
+	Column(
+		modifier = modifier.fillMaxWidth().alpha(.6f),
+		horizontalAlignment = Alignment.CenterHorizontally,
+		verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically)
+	) {
+		Icon(
+			imageVector = icon,
+			contentDescription = null,
+			modifier = Modifier.size(48.dp),
+			tint = color
+		)
+		Text(
+			label,
+			style = MaterialTheme.typography.headlineMedium,
+			color = color,
+			textAlign = TextAlign.Center,
+			modifier = Modifier.widthIn(max = 400.dp)
+		)
+	}
+}

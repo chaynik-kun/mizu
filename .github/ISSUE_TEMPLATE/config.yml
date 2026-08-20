@@ -1,0 +1,7 @@
+contact_links:
+  - name: "Discord"
+    url: https://discord.gg/TBcnNX66PH
+    about: Ask general questions here
+  - name: "Downloads"
+    url: https://github.com/ssalggnikool/Mizu
+    about: See the top of the README for downloads

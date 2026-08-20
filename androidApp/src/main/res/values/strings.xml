@@ -1,0 +1,6 @@
+<resources>
+	<string name="app_name" translatable="false">Mizu</string>
+	<string name="auto_albums">Albums</string>
+	<string name="auto_playlists">Playlists</string>
+	<string name="auto_songs">All songs</string>
+</resources>

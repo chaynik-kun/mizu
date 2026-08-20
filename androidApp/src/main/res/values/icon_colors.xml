@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<color name="icon_original_background">#101418</color>
+	<color name="icon_monochrome_background">#FFFFFF</color>
+	<color name="icon_black_background">#FFFFFF</color>
+	<color name="icon_white_background">#101010</color>
+	<color name="icon_apple_music_background">#101010</color>
+	<color name="icon_purple_background">#101010</color>
+	<color name="icon_yellow_background">#101010</color>
+	<color name="icon_green_background">#101010</color>
+	<color name="icon_brown_background">#101010</color>
+</resources>

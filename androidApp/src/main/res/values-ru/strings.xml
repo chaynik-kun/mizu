@@ -1,0 +1,5 @@
+<resources>
+	<string name="auto_albums">Альбомы</string>
+	<string name="auto_playlists">Плейлисты</string>
+	<string name="auto_songs">Все песни</string>
+</resources>

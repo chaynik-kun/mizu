@@ -1,0 +1,58 @@
+package chaynik.mizu.ui.screens.settings.components
+
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.VerticalDivider
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import org.koin.compose.koinInject
+import chaynik.mizu.domain.manager.PreferenceManager
+import chaynik.mizu.ui.components.common.FormRow
+
+@Composable
+fun SettingSwitchRow(
+	title: @Composable () -> Unit,
+	subtitle: @Composable () -> Unit = {},
+	value: Boolean,
+	onSetValue: (Boolean) -> Unit,
+	enabled: Boolean = true,
+	contentPadding: PaddingValues = PaddingValues(horizontal = 14.dp, vertical = 18.dp),
+	isDividerShown: Boolean = false
+) {
+	val preferenceManager = koinInject<PreferenceManager>()
+	val interactionSource = remember { MutableInteractionSource() }
+	FormRow(
+		onClick = { onSetValue(!value) },
+		contentPadding = contentPadding,
+		interactionSource = interactionSource
+	) {
+		Column(Modifier.weight(1f)) {
+			title()
+			CompositionLocalProvider(
+				LocalTextStyle provides MaterialTheme.typography.bodyMedium.copy(
+					color = MaterialTheme.colorScheme.onSurfaceVariant
+				)
+			) {
+				subtitle()
+			}
+		}
+		if (preferenceManager.theme.isMaterialLike() && isDividerShown) {
+			VerticalDivider(Modifier.height(32.dp).padding(horizontal = 14.dp))
+		}
+		SettingSwitch(
+			modifier = Modifier.padding(start = 4.dp),
+			checked = value,
+			onCheckedChange = null,
+			enabled = enabled,
+			interactionSource = interactionSource
+		)
+	}
+}

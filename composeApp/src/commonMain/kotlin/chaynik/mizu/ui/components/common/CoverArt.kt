@@ -1,0 +1,145 @@
+package chaynik.mizu.ui.components.common
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.hideFromAccessibility
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.SubcomposeAsyncImage
+import coil3.network.NetworkHeaders
+import coil3.network.httpHeaders
+import coil3.request.CachePolicy
+import coil3.request.ImageRequest
+import coil3.request.crossfade
+import mizu.composeapp.generated.resources.Res
+import mizu.composeapp.generated.resources.info_image_failed_to_load
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
+import chaynik.mizu.domain.manager.PreferenceManager
+import chaynik.mizu.domain.manager.SessionManager
+import chaynik.mizu.domain.manager.ConnectivityManager
+import chaynik.mizu.icons.Icons
+import chaynik.mizu.icons.outlined.Error
+import chaynik.mizu.ui.theme.defaultFont
+import chaynik.mizu.util.core.Logger
+import coil3.compose.LocalPlatformContext as LocalCoilPlatformContext
+
+@Composable
+fun CoverArt(
+	modifier: Modifier = Modifier,
+	coverArtId: String?,
+	contentDescription: String? = null,
+	onClick: (() -> Unit)? = null,
+	onLongClick: (() -> Unit)? = null,
+	square: Boolean = true,
+	crossfadeMs: Int = 500,
+	shadowElevation: Dp = 0.dp,
+	interactionSource: MutableInteractionSource? = null,
+	shape: Shape? = null
+) {
+	val preferenceManager = koinInject<PreferenceManager>()
+	val shape = shape ?: if (!coverArtId.orEmpty().startsWith("ar-")) {
+		preferenceManager.coverArtShape.shape
+	} else {
+		preferenceManager.artistImageShape.shape
+	}
+	val coilPlatformContext = LocalCoilPlatformContext.current
+	val customHeaders = preferenceManager.customHeaders
+	val sessionManager = koinInject<SessionManager>()
+	val connectivityManager = koinInject<ConnectivityManager>()
+	val isOnline by connectivityManager.isOnline.collectAsStateWithLifecycle()
+	val model = remember(coverArtId, customHeaders, isOnline) {
+		val networkHeaders = NetworkHeaders.Builder().apply {
+			preferenceManager.customHeadersMap().forEach { (key, value) -> add(key, value) }
+		}.build()
+		ImageRequest.Builder(coilPlatformContext)
+			.data(coverArtId?.let { sessionManager.getCoverArtUrl(it) })
+			.memoryCacheKey(coverArtId)
+			.diskCacheKey(coverArtId)
+			.diskCachePolicy(CachePolicy.ENABLED)
+			.memoryCachePolicy(CachePolicy.ENABLED)
+			.networkCachePolicy(if (isOnline) CachePolicy.ENABLED else CachePolicy.DISABLED)
+			.crossfade(crossfadeMs)
+			.httpHeaders(networkHeaders)
+			.build()
+	}
+
+	val commonModifier = modifier
+		.then(if (square) Modifier.aspectRatio(1f) else Modifier)
+		.shadow(shadowElevation, shape)
+		.clip(shape)
+		.background(MaterialTheme.colorScheme.surfaceContainer)
+		.then(
+			if (onClick != null)
+				Modifier.combinedClickable(
+					onClick = onClick,
+					onLongClick = onLongClick,
+					interactionSource = interactionSource
+				)
+			else Modifier
+		)
+		.then(
+			if (interactionSource != null)
+				Modifier.indication(interactionSource, ripple())
+			else Modifier
+		)
+
+	if (coverArtId.isNullOrBlank()) return Box(commonModifier)
+	SubcomposeAsyncImage(
+		model = model,
+		contentDescription = contentDescription,
+		modifier = commonModifier,
+		contentScale = ContentScale.Crop,
+		error = {
+			LaunchedEffect(it.result.throwable) {
+				Logger.w(
+					"CoverArt",
+					"Failed to load cover art, falling back to placeholder",
+					it.result.throwable
+				)
+			}
+			if (isOnline) LazyColumn(
+				horizontalAlignment = Alignment.CenterHorizontally,
+				verticalArrangement = Arrangement.Center
+			) {
+				item { Icon(Icons.Outlined.Error, null) }
+				item {
+					Text(
+						stringResource(Res.string.info_image_failed_to_load),
+						maxLines = 1,
+						autoSize = TextAutoSize.StepBased(
+							minFontSize = 1.sp,
+							maxFontSize = 14.sp
+						),
+						fontFamily = defaultFont(grade = 10, round = 100f),
+						modifier = Modifier.semantics { hideFromAccessibility() }
+					)
+				}
+			} else Box(Modifier.matchParentSize())
+		}
+	)
+}

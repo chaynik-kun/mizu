@@ -1,0 +1,108 @@
+name: Build
+
+on:
+  push:
+    paths:
+      - androidApp/**
+      - composeApp/**
+      - gradle/**
+      - build.gradle.kts
+      - settings.gradle.kts
+      - .github/workflows/build.yml
+    tags:
+      - 'v*'
+    branches:
+      - '*'
+  pull_request:
+    paths:
+      - androidApp/**
+      - composeApp/**
+      - gradle/**
+      - build.gradle.kts
+      - settings.gradle.kts
+      - .github/workflows/build.yml
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-android:
+    name: Android
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+
+      - name: Build with Gradle (release)
+        id: build_release
+        if: github.event_name == 'push' && env.SIGNING_KEY_ALIAS
+        env:
+          SIGNING_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          SIGNING_STORE_FILE: ${{ github.workspace }}/release.keystore
+          RELEASE: true
+        run: |
+          echo "${{ secrets.KEYSTORE }}" | base64 -d > release.keystore
+          ./gradlew :androidApp:packageRelease --stacktrace
+          rm release.keystore
+
+      - name: Build with Gradle (debug)
+        id: build_debug
+        if: github.event_name == 'pull_request'
+        run: |
+          ./gradlew :androidApp:assembleDebug --stacktrace
+
+      - name: Generate release checksums
+        if: steps.build_release.outcome == 'success'
+        shell: bash
+        run: |
+          while IFS= read -r -d '' apk; do
+            sha256sum "$apk" > "$apk.sha256"
+          done < <(find androidApp/build/outputs/apk/release -type f -name '*.apk' -print0)
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: mizu-release-android
+          path: |
+            androidApp/build/outputs/apk/**/*.apk
+            androidApp/build/outputs/apk/**/*.sha256
+          compression-level: 0
+          if-no-files-found: ignore
+
+  create-release:
+    name: Create GitHub Release
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: [ build-android ]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v7
+
+      - name: Create Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          shopt -s nullglob globstar
+
+          gh release create "$GITHUB_REF_NAME" **/*.apk \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "$GITHUB_REF_NAME" \
+            --draft --generate-notes

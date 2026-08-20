@@ -1,0 +1,22 @@
+package chaynik.mizu.data.database.entities
+
+import androidx.room3.Entity
+import androidx.room3.PrimaryKey
+import kotlinx.serialization.Serializable
+
+@Serializable
+@Entity
+data class DownloadEntity(
+	@PrimaryKey val songId: String,
+	val status: DownloadStatus,
+	val progress: Float = 0f,
+	val filePath: String? = null
+)
+
+@Serializable
+enum class DownloadStatus {
+	NOT_DOWNLOADED,
+	DOWNLOADING,
+	DOWNLOADED,
+	FAILED
+}

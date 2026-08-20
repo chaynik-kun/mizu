@@ -1,0 +1,295 @@
+package chaynik.mizu.ui.screens.login.pages
+
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withLink
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.compose.dropUnlessResumed
+import com.kyant.capsule.ContinuousCapsule
+import kotlinx.coroutines.launch
+import mizu.composeapp.generated.resources.Res
+import mizu.composeapp.generated.resources.action_log_in
+import mizu.composeapp.generated.resources.action_open_settings
+import mizu.composeapp.generated.resources.info_login_description_end
+import mizu.composeapp.generated.resources.info_login_description_middle
+import mizu.composeapp.generated.resources.info_login_description_start
+import mizu.composeapp.generated.resources.info_app_version
+import mizu.composeapp.generated.resources.mizu_logo
+import mizu.composeapp.generated.resources.notice_local_network_denied
+import mizu.composeapp.generated.resources.option_custom_headers
+import mizu.composeapp.generated.resources.subtitle_local_network_denied
+import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.resources.painterResource
+import org.koin.compose.koinInject
+import chaynik.mizu.LocalNavStack
+import chaynik.mizu.LocalPlatformContext
+import chaynik.mizu.domain.manager.LoginManager
+import chaynik.mizu.domain.manager.PermissionManager
+import chaynik.mizu.domain.manager.PreferenceManager
+import chaynik.mizu.icons.Icons
+import chaynik.mizu.icons.outlined.Error
+import chaynik.mizu.ui.components.common.FormButton
+import chaynik.mizu.ui.components.dialogs.FormDialog
+import chaynik.mizu.ui.core.LoginUiState
+import chaynik.mizu.ui.navigation.Screen
+import chaynik.mizu.ui.theme.defaultFont
+
+@Composable
+fun LoginScreenContent(innerPadding: PaddingValues) {
+	val viewModel = koinInject<LoginManager>()
+	val loginState by viewModel.loginState.collectAsStateWithLifecycle()
+
+	val instanceState = viewModel.instanceState
+	val usernameState = viewModel.usernameState
+	val passwordState = viewModel.passwordState
+
+	val isBusy = loginState is LoginUiState.Loading || loginState is LoginUiState.Syncing
+
+	val linkColor = MaterialTheme.colorScheme.primary
+	val startText = stringResource(Res.string.info_login_description_start)
+	val middleText = stringResource(Res.string.info_login_description_middle)
+	val endText = stringResource(Res.string.info_login_description_end)
+	val noticeText = remember {
+		buildAnnotatedString {
+			append("$startText ")
+			withLink(LinkAnnotation.Url(url = "https://www.navidrome.org/")) {
+				withStyle(SpanStyle(color = linkColor)) {
+					append(middleText)
+				}
+			}
+			append(" $endText")
+		}
+	}
+
+	val haptics = LocalHapticFeedback.current
+	val backStack = LocalNavStack.current
+	val platformContext = LocalPlatformContext.current
+	val focusManager = LocalFocusManager.current
+
+	val instanceFocusRequester = remember { FocusRequester() }
+	val usernameFocusRequester = remember { FocusRequester() }
+	val passwordFocusRequester = remember { FocusRequester() }
+
+	val permissionManager = koinInject<PermissionManager>()
+	val preferenceManager = koinInject<PreferenceManager>()
+	val loginScope = rememberCoroutineScope()
+	var localNetworkDenied by rememberSaveable { mutableStateOf(false) }
+	val login: () -> Unit = {
+		loginScope.launch {
+			if (!permissionManager.requestLocalNetworkPermission()) {
+				localNetworkDenied = true
+				return@launch
+			}
+
+			if (!viewModel.login()) {
+				haptics.performHapticFeedback(HapticFeedbackType.Reject)
+				when {
+					viewModel.instanceError -> instanceFocusRequester.requestFocus()
+					viewModel.usernameError -> usernameFocusRequester.requestFocus()
+					viewModel.passwordError -> passwordFocusRequester.requestFocus()
+				}
+			}
+		}
+	}
+
+	LaunchedEffect(loginState) {
+		if (loginState is LoginUiState.Success) {
+			backStack.clear()
+			backStack.add(Screen.Home())
+		}
+	}
+
+	Box {
+		LoginScreenProgress(
+			modifier = Modifier
+				.align(Alignment.TopCenter)
+				.padding(top = innerPadding.calculateTopPadding()),
+			isBusy = isBusy,
+			loginUiState = loginState
+		)
+
+		Column(
+			modifier = Modifier
+				.fillMaxSize()
+				.padding(innerPadding)
+				.consumeWindowInsets(innerPadding)
+				.imePadding(),
+			horizontalAlignment = Alignment.CenterHorizontally,
+			verticalArrangement = Arrangement.spacedBy(6.dp)
+		) {
+			Column(
+				modifier = Modifier
+					.weight(1f)
+					.widthIn(max = 600.dp)
+					.verticalScroll(rememberScrollState())
+			) {
+				Spacer(Modifier.weight(0.55f))
+
+				Image(
+					painter = painterResource(Res.drawable.mizu_logo),
+					contentDescription = "Mizu",
+					contentScale = ContentScale.Fit,
+					modifier = Modifier
+						.size(width = 92.dp, height = 122.dp)
+						.align(Alignment.CenterHorizontally)
+				)
+
+				Spacer(Modifier.height(24.dp))
+
+				Text(
+					text = stringResource(Res.string.action_log_in),
+					style = MaterialTheme.typography.headlineMedium,
+					fontFamily = defaultFont(round = 100f),
+					modifier = Modifier.padding(horizontal = 16.dp)
+				)
+				Text(
+					text = noticeText,
+					modifier = Modifier.padding(horizontal = 16.dp)
+				)
+
+				Spacer(Modifier.height(8.dp))
+
+				LoginScreenError(loginUiState = loginState)
+
+				LoginScreenFields(
+					isBusy = isBusy,
+					instanceState = instanceState,
+					instanceError = viewModel.instanceError,
+					instanceFocusRequester = instanceFocusRequester,
+					onInstanceFocusChanged = { viewModel.validateInstance() },
+					usernameState = usernameState,
+					usernameError = viewModel.usernameError,
+					usernameFocusRequester = usernameFocusRequester,
+					onUsernameFocusChanged = { viewModel.validateUsername() },
+					passwordState = passwordState,
+					passwordError = viewModel.passwordError,
+					passwordFocusRequester = passwordFocusRequester,
+					onPasswordFocusChanged = { viewModel.validatePassword() },
+					onLogin = login,
+					allowInsecureHttp = preferenceManager.allowInsecureHttp,
+					onAllowInsecureHttpChange = { preferenceManager.allowInsecureHttp = it }
+				)
+				Spacer(Modifier.height(12.dp))
+
+				Text(
+					text = stringResource(Res.string.option_custom_headers),
+					color = MaterialTheme.colorScheme.primary,
+					textDecoration = TextDecoration.Underline,
+					modifier = Modifier
+						.padding(horizontal = 16.dp)
+						.clickable(onClick = dropUnlessResumed {
+							backStack.lastOrNull()?.let {
+								if (it is Screen.Login) {
+									backStack.add(Screen.Settings.CustomHeaders)
+									focusManager.clearFocus(true)
+								}
+							}
+						})
+				)
+
+				Spacer(Modifier.weight(2.25f))
+			}
+
+			Column(
+				modifier = Modifier
+					.widthIn(max = 600.dp)
+					.padding(horizontal = 16.dp)
+					.padding(bottom = 8.dp)
+			) {
+				Text(
+					text = "Mizu",
+					style = MaterialTheme.typography.titleLarge,
+					fontFamily = defaultFont(round = 100f),
+					modifier = Modifier
+						.align(Alignment.CenterHorizontally)
+						.padding(bottom = 8.dp)
+				)
+				LoginScreenSyncStatus(loginUiState = loginState)
+				Button(
+					modifier = Modifier.fillMaxWidth(),
+					onClick = {
+						login()
+					},
+					enabled = !isBusy,
+					shape = ContinuousCapsule
+				) {
+					Text(
+						text = stringResource(Res.string.action_log_in),
+						fontFamily = defaultFont(100)
+					)
+				}
+				Text(
+					text = stringResource(
+						Res.string.info_app_version,
+						platformContext.appVersion
+					),
+					style = MaterialTheme.typography.labelSmall,
+					color = MaterialTheme.colorScheme.onSurfaceVariant,
+					modifier = Modifier
+						.align(Alignment.CenterHorizontally)
+						.padding(top = 8.dp)
+				)
+			}
+		}
+	}
+
+	if (localNetworkDenied) {
+		FormDialog(
+			onDismissRequest = { localNetworkDenied = false },
+			icon = { Icon(Icons.Outlined.Error, null) },
+			title = { Text(stringResource(Res.string.notice_local_network_denied)) },
+			content = { Text(stringResource(Res.string.subtitle_local_network_denied)) },
+			buttons = {
+				FormButton(
+					onClick = {
+						localNetworkDenied = false
+						permissionManager.openPermissionsSettings()
+					}
+				) {
+					Text(stringResource(Res.string.action_open_settings))
+				}
+			}
+		)
+	}
+}

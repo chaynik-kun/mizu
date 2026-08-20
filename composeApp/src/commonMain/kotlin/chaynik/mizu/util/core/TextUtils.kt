@@ -1,0 +1,43 @@
+package chaynik.mizu.util.core
+
+import androidx.compose.foundation.text.InlineTextContent
+import androidx.compose.material3.Icon
+import androidx.compose.ui.text.Placeholder
+import androidx.compose.ui.text.PlaceholderVerticalAlign
+import androidx.compose.ui.unit.sp
+import kotlinx.collections.immutable.persistentMapOf
+import mizu.composeapp.generated.resources.Res
+import mizu.composeapp.generated.resources.info_explicit
+import org.jetbrains.compose.resources.stringResource
+import chaynik.mizu.icons.Icons
+import chaynik.mizu.icons.filled.Explicit
+
+val InlineExplicitIcon = persistentMapOf(
+	"InlineExplicitIcon" to InlineTextContent(
+		Placeholder(
+			width = 16.sp,
+			height = 16.sp,
+			placeholderVerticalAlign = PlaceholderVerticalAlign.Center
+		)
+	) {
+		Icon(
+			imageVector = Icons.Filled.Explicit,
+			contentDescription = stringResource(Res.string.info_explicit)
+		)
+	}
+)
+
+val InlineExplicitIconLarge = persistentMapOf(
+	"InlineExplicitIcon" to InlineTextContent(
+		Placeholder(
+			width = 20.sp,
+			height = 20.sp,
+			placeholderVerticalAlign = PlaceholderVerticalAlign.Center
+		)
+	) {
+		Icon(
+			imageVector = Icons.Filled.Explicit,
+			contentDescription = stringResource(Res.string.info_explicit)
+		)
+	}
+)

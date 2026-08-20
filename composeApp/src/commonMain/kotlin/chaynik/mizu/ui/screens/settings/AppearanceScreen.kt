@@ -1,0 +1,299 @@
+package chaynik.mizu.ui.screens.settings
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
+import androidx.compose.material3.Text
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.dropUnlessResumed
+import kotlinx.collections.immutable.toImmutableList
+import mizu.composeapp.generated.resources.Res
+import mizu.composeapp.generated.resources.option_alphabetical_scroll
+import mizu.composeapp.generated.resources.option_animation_style
+import mizu.composeapp.generated.resources.option_artist_image_shape
+import mizu.composeapp.generated.resources.option_artwork_shape
+import mizu.composeapp.generated.resources.option_choose_app_icon
+import mizu.composeapp.generated.resources.option_choose_theme
+import mizu.composeapp.generated.resources.option_dynamic_theming
+import mizu.composeapp.generated.resources.option_cover_art_size
+import mizu.composeapp.generated.resources.option_grid_items_per_row
+import mizu.composeapp.generated.resources.option_use_marquee_text
+import mizu.composeapp.generated.resources.title_appearance
+import mizu.composeapp.generated.resources.title_choose_font
+import mizu.composeapp.generated.resources.title_layout
+import mizu.composeapp.generated.resources.title_miscellaneous
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
+import chaynik.mizu.LocalNavStack
+import chaynik.mizu.LocalPlatformContext
+import chaynik.mizu.domain.manager.PreferenceManager
+import chaynik.mizu.domain.models.settings.AnimationStyle
+import chaynik.mizu.domain.models.settings.MarqueeSpeed
+import chaynik.mizu.ui.components.common.Form
+import chaynik.mizu.ui.components.common.FormRow
+import chaynik.mizu.ui.components.common.FormTitle
+import chaynik.mizu.ui.components.layouts.NestedTopBar
+import chaynik.mizu.ui.navigation.Screen
+import chaynik.mizu.ui.screens.settings.components.SettingSelectionRow
+import chaynik.mizu.ui.screens.settings.components.SettingSwitchRow
+import chaynik.mizu.ui.screens.settings.dialogs.ArtworkShapeDialog
+import chaynik.mizu.ui.screens.settings.dialogs.GridSizeDialog
+import chaynik.mizu.ui.screens.settings.dialogs.GridSizePreview
+import chaynik.mizu.util.core.PlatformType
+
+@Composable
+fun SettingsAppearanceScreen() {
+	val platformContext = LocalPlatformContext.current
+	val backStack = LocalNavStack.current
+	var showArtworkShapeDialog by rememberSaveable { mutableStateOf(false) }
+	var showArtistImageShapeDialog by rememberSaveable { mutableStateOf(false) }
+	val preferenceManager = koinInject<PreferenceManager>()
+
+	Scaffold(
+		topBar = {
+			NestedTopBar(
+				{ Text(stringResource(Res.string.title_appearance)) },
+				hideBack = platformContext.sizeClass.widthSizeClass >= WindowWidthSizeClass.Medium
+			)
+		},
+		contentWindowInsets = WindowInsets.statusBars
+	) { innerPadding ->
+		CompositionLocalProvider(
+			LocalMinimumInteractiveComponentSize provides 0.dp
+		) {
+			Column(
+				Modifier
+					.padding(innerPadding)
+					.verticalScroll(rememberScrollState())
+					.padding(top = 16.dp, end = 16.dp, start = 16.dp)
+			) {
+				Form {
+					FormRow(
+						onClick = dropUnlessResumed {
+							backStack.add(Screen.Settings.Fonts)
+						}
+					) {
+						Column(Modifier.weight(1f)) {
+							Text(stringResource(Res.string.title_choose_font))
+							Text(
+								preferenceManager.font.displayName,
+								style = MaterialTheme.typography.bodyMedium,
+								color = MaterialTheme.colorScheme.onSurfaceVariant
+							)
+						}
+					}
+
+					FormRow(
+						onClick = dropUnlessResumed {
+							backStack.add(Screen.Settings.Themes)
+						}
+					) {
+						Column(Modifier.weight(1f)) {
+							Text(stringResource(Res.string.option_choose_theme))
+							Text(
+								stringResource(
+									if (appearanceStyleSource(preferenceManager.dynamicTheming) == AppearanceStyleSource.MaterialYou) {
+										Res.string.option_dynamic_theming
+									} else {
+										preferenceManager.theme.title
+									}
+								),
+								style = MaterialTheme.typography.bodyMedium,
+								color = MaterialTheme.colorScheme.onSurfaceVariant
+							)
+						}
+					}
+					if (platformContext.platformType == PlatformType.Android) {
+						FormRow(
+							onClick = dropUnlessResumed {
+								backStack.add(Screen.Settings.AppIcon)
+							}
+						) {
+							Column(Modifier.weight(1f)) {
+								Text(stringResource(Res.string.option_choose_app_icon))
+								Text(
+									preferenceManager.appIconVariant.name,
+									style = MaterialTheme.typography.bodyMedium,
+									color = MaterialTheme.colorScheme.onSurfaceVariant
+								)
+							}
+						}
+					}
+				}
+
+				FormTitle(stringResource(Res.string.title_layout))
+				Form {
+					FormRow(
+						onClick = {
+							showArtworkShapeDialog = true
+						}
+					) {
+						Column(Modifier.weight(1f)) {
+							Text(stringResource(Res.string.option_artwork_shape))
+							Text(
+								preferenceManager.coverArtShape.name,
+								style = MaterialTheme.typography.bodyMedium,
+								color = MaterialTheme.colorScheme.onSurfaceVariant
+							)
+						}
+
+						val shape = preferenceManager.coverArtShape.decreasedShape
+						Box(
+							modifier = Modifier
+								.size(48.dp)
+								.clip(shape)
+								.background(MaterialTheme.colorScheme.primaryContainer)
+								.border(2.dp, MaterialTheme.colorScheme.primary, shape)
+						)
+					}
+
+					FormRow(
+						onClick = {
+							showArtistImageShapeDialog = true
+						}
+					) {
+						Column(Modifier.weight(1f)) {
+							Text(stringResource(Res.string.option_artist_image_shape))
+							Text(
+								preferenceManager.artistImageShape.name,
+								style = MaterialTheme.typography.bodyMedium,
+								color = MaterialTheme.colorScheme.onSurfaceVariant
+							)
+						}
+
+						val shape = preferenceManager.artistImageShape.decreasedShape
+						Box(
+							modifier = Modifier
+								.size(48.dp)
+								.clip(shape)
+								.background(MaterialTheme.colorScheme.primaryContainer)
+								.border(2.dp, MaterialTheme.colorScheme.primary, shape)
+						)
+					}
+
+					var presented by remember { mutableStateOf(false) }
+					val onClick = { presented = true }
+					FormRow(
+						onClick = if (platformContext.sizeClass.widthSizeClass <= WindowWidthSizeClass.Compact)
+							onClick
+						else null
+					) {
+						if (platformContext.sizeClass.widthSizeClass <= WindowWidthSizeClass.Compact) {
+
+							Column(Modifier.weight(1f)) {
+								Text(stringResource(Res.string.option_grid_items_per_row))
+								Text(
+									preferenceManager.gridSize.label,
+									style = MaterialTheme.typography.bodyMedium,
+									color = MaterialTheme.colorScheme.onSurfaceVariant
+								)
+							}
+
+							GridSizePreview(preferenceManager.gridSize.value)
+
+							GridSizeDialog(
+								presented = presented,
+								onDismissRequest = { presented = false }
+							)
+						} else {
+							Column(Modifier.fillMaxWidth()) {
+								Row(
+									modifier = Modifier.fillMaxWidth(),
+									horizontalArrangement = Arrangement.SpaceBetween
+								) {
+									Text(stringResource(Res.string.option_cover_art_size))
+									Text(
+										"${preferenceManager.artGridItemSize}",
+										fontFamily = FontFamily.Monospace,
+										fontWeight = FontWeight(400),
+										fontSize = 13.sp,
+										color = MaterialTheme.colorScheme.onSurfaceVariant,
+									)
+								}
+								Slider(
+									value = preferenceManager.artGridItemSize,
+									onValueChange = {
+										preferenceManager.artGridItemSize = it
+									},
+									valueRange = 50f..500f,
+									steps = 8,
+								)
+							}
+						}
+					}
+				}
+
+				FormTitle(stringResource(Res.string.title_miscellaneous))
+				Form {
+					SettingSwitchRow(
+						title = { Text(stringResource(Res.string.option_alphabetical_scroll)) },
+						value = preferenceManager.alphabeticalScroll,
+						onSetValue = { preferenceManager.alphabeticalScroll = it }
+					)
+
+					SettingSelectionRow(
+						title = { Text(stringResource(Res.string.option_use_marquee_text)) },
+						items = MarqueeSpeed.entries.toImmutableList(),
+						label = { it.name },
+						selection = preferenceManager.marqueeSpeed,
+						onSelect = { preferenceManager.marqueeSpeed = it }
+					)
+
+					SettingSelectionRow(
+						title = { Text(stringResource(Res.string.option_animation_style)) },
+						items = AnimationStyle.entries.toImmutableList(),
+						label = { stringResource(it.displayName) },
+						selection = preferenceManager.animationStyle,
+						onSelect = { preferenceManager.animationStyle = it }
+					)
+				}
+			}
+		}
+		ArtworkShapeDialog(
+			title = { Text(stringResource(Res.string.option_artwork_shape)) },
+			selection = preferenceManager.coverArtShape,
+			onSelect = { preferenceManager.coverArtShape = it },
+			presented = showArtworkShapeDialog,
+			onDismissRequest = { showArtworkShapeDialog = false }
+		)
+		ArtworkShapeDialog(
+			title = { Text(stringResource(Res.string.option_artist_image_shape)) },
+			selection = preferenceManager.artistImageShape,
+			onSelect = { preferenceManager.artistImageShape = it },
+			presented = showArtistImageShapeDialog,
+			onDismissRequest = { showArtistImageShapeDialog = false }
+		)
+	}
+}
+
+internal enum class AppearanceStyleSource { MaterialYou, SavedMizuStyle }
+
+internal fun appearanceStyleSource(dynamicTheming: Boolean): AppearanceStyleSource =
+	if (dynamicTheming) AppearanceStyleSource.MaterialYou else AppearanceStyleSource.SavedMizuStyle

@@ -1,0 +1,412 @@
+package chaynik.mizu.domain.manager
+
+import coil3.SingletonImageLoader
+import coil3.request.CachePolicy
+import coil3.request.ImageRequest
+import coil3.size.Size
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.HttpTimeoutConfig
+import io.ktor.client.plugins.onDownload
+import io.ktor.client.request.prepareRequest
+import io.ktor.client.statement.bodyAsChannel
+import io.ktor.http.HttpMethod
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.sync.withPermit
+import chaynik.mizu.data.database.dao.AlbumDao
+import chaynik.mizu.data.database.dao.DownloadDao
+import chaynik.mizu.data.database.dao.LyricDao
+import chaynik.mizu.data.database.entities.DownloadEntity
+import chaynik.mizu.data.database.entities.DownloadStatus
+import chaynik.mizu.data.database.entities.LyricEntity
+import chaynik.mizu.domain.models.DomainSong
+import chaynik.mizu.domain.models.DomainSongCollection
+import chaynik.mizu.domain.repositories.LyricsRepository
+import chaynik.mizu.util.core.Logger
+import chaynik.mizu.util.core.PlatformType
+import coil3.PlatformContext as CoilPlatformContext
+
+class DownloadManager(
+	private val coilPlatformContext: CoilPlatformContext,
+	private val downloadDao: DownloadDao,
+	private val albumDao: AlbumDao,
+	private val storageManager: StorageManager,
+	private val lyricsRepository: LyricsRepository,
+	private val lyricDao: LyricDao,
+	private val sessionManager: SessionManager,
+	private val preferenceManager: PreferenceManager,
+	private val connectivityManager: ConnectivityManager,
+	private val platformType: PlatformType,
+	private val httpClientFactory: ServerHttpClientFactory
+) {
+	private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+	private val client = httpClientFactory.create(
+		requestTimeoutMillis = HttpTimeoutConfig.INFINITE_TIMEOUT_MS,
+		socketTimeoutMillis = HttpTimeoutConfig.INFINITE_TIMEOUT_MS
+	)
+	private val activeDownloadsMutex = Mutex()
+	private val activeDownloads = mutableMapOf<String, Job>()
+	private val downloadSemaphore =
+		Semaphore(10)// idk a good number, maybe u should be able to choose
+
+	private var libraryDownloadJob: Job? = null
+
+	val allDownloads = downloadDao.getAllDownloads().map { it.toImmutableList() }
+	val downloadCount = downloadDao.getDownloadsCount()
+	val downloadSize = allDownloads.map { downloads ->
+		downloads
+			.filter { it.status == DownloadStatus.DOWNLOADED }
+			.mapNotNull { it.filePath }
+			.sumOf(storageManager::getFileSize)
+	}
+
+	val downloadedSongs: StateFlow<Map<String, String>>
+		field = MutableStateFlow(emptyMap())
+
+	val isDownloadingLibrary: StateFlow<Boolean>
+		field = MutableStateFlow(false)
+
+	val libraryDownloadProgress: StateFlow<Float>
+		field = MutableStateFlow(0f)
+
+	init {
+		scope.launch {
+			allDownloads.collectLatest { downloads ->
+			downloadedSongs.value = downloads
+					.filter { it.status == DownloadStatus.DOWNLOADED }
+					.mapNotNull { download -> download.filePath?.let { download.songId to it } }
+					.toMap()
+			}
+		}
+	}
+
+	fun getDownloadedFilePath(songId: String): String? {
+		return downloadedSongs.value[songId]
+	}
+
+	fun downloadSong(song: DomainSong): Job {
+		val job = scope.launch(Dispatchers.IO) {
+			val alreadyActive =
+				activeDownloadsMutex.withLock { activeDownloads.containsKey(song.id) }
+			if (alreadyActive) return@launch
+
+			try {
+				val currentJob = coroutineContext[Job] ?: return@launch
+				activeDownloadsMutex.withLock { activeDownloads[song.id] = currentJob }
+
+				downloadSemaphore.withPermit {
+					executeDownloadProcess(song)
+				}
+			} finally {
+				activeDownloadsMutex.withLock { activeDownloads.remove(song.id) }
+			}
+		}
+		return job
+	}
+
+	suspend fun downloadCollection(collection: DomainSongCollection) {
+		collection.songs
+			.filter { !isDownloaded(it.id) }
+			.forEach { downloadSong(it) }
+	}
+
+	fun downloadEntireLibrary(songs: List<DomainSong>) {
+		if (isDownloadingLibrary.value) return
+
+		libraryDownloadJob = scope.launch(Dispatchers.IO) {
+			try {
+				isDownloadingLibrary.value = true
+				libraryDownloadProgress.value = 0f
+
+				val songsToDownload = songs.filter { !isDownloaded(it.id) }
+				val totalToDownload = songsToDownload.size
+
+				if (totalToDownload == 0) {
+					isDownloadingLibrary.value = false
+					libraryDownloadProgress.value = 1f
+					return@launch
+				}
+
+				val downloadQueue = Channel<DomainSong>(Channel.UNLIMITED)
+				songsToDownload.forEach { downloadQueue.trySend(it) }
+				downloadQueue.close()
+
+				var processedCount = 0
+				val progressMutex = Mutex()
+
+				val workers = List(10) {
+					launch {
+						for (song in downloadQueue) {
+							downloadSong(song).join()
+
+							progressMutex.withLock {
+								processedCount++
+								libraryDownloadProgress.value =
+									processedCount.toFloat() / totalToDownload.toFloat()
+							}
+						}
+					}
+				}
+
+				workers.joinAll()
+				isDownloadingLibrary.value = false
+
+			} catch (_: CancellationException) {
+				isDownloadingLibrary.value = false
+				libraryDownloadProgress.value = 0f
+			}
+		}
+	}
+
+	fun cancelAllActiveDownloads() {
+		libraryDownloadJob?.cancel()
+		libraryDownloadJob = null
+		isDownloadingLibrary.value = false
+		libraryDownloadProgress.value = 0f
+
+		scope.launch(Dispatchers.IO) {
+			val jobsToCancel = activeDownloadsMutex.withLock {
+				val copy = activeDownloads.toMap()
+				activeDownloads.clear()
+				copy
+			}
+
+			jobsToCancel.forEach { (songId, job) ->
+				job.cancel()
+				val existing = downloadDao.getDownloadById(songId)
+				if (existing?.status == DownloadStatus.DOWNLOADING) {
+					downloadDao.deleteDownload(songId)
+				}
+			}
+		}
+	}
+
+	fun cancelDownload(songId: String) {
+		scope.launch(Dispatchers.IO) {
+			activeDownloadsMutex.withLock {
+				activeDownloads[songId]?.cancel()
+				activeDownloads.remove(songId)
+			}
+
+			val existing = downloadDao.getDownloadById(songId)
+			if (existing?.status == DownloadStatus.DOWNLOADING
+				|| existing?.status == DownloadStatus.FAILED
+			) {
+				downloadDao.deleteDownload(songId)
+			}
+		}
+	}
+
+	fun cancelCollectionDownload(collection: DomainSongCollection) {
+		collection.songs.forEach { song ->
+			cancelDownload(song.id)
+		}
+	}
+
+	fun deleteDownload(songId: String) {
+		cancelDownload(songId)
+		scope.launch {
+			val download = downloadDao.getDownloadById(songId)
+			download?.filePath?.let { storageManager.deleteFile(it) }
+			downloadDao.deleteDownload(songId)
+		}
+	}
+
+	fun deleteDownloadedCollection(collection: DomainSongCollection) {
+		collection.songs.forEach { song ->
+			deleteDownload(song.id)
+		}
+	}
+
+	suspend fun isDownloaded(songId: String): Boolean {
+		return downloadDao.getDownloadById(songId)?.status == DownloadStatus.DOWNLOADED
+	}
+
+	fun getCollectionDownloadStatus(songIds: List<String>): Flow<DownloadStatus> {
+		return allDownloads.map { downloads ->
+			val collectionDownloads = downloads.filter { it.songId in songIds }
+			when {
+				collectionDownloads.isEmpty() -> DownloadStatus.NOT_DOWNLOADED
+				collectionDownloads.any { it.status == DownloadStatus.DOWNLOADING } -> DownloadStatus.DOWNLOADING
+				collectionDownloads.any { it.status == DownloadStatus.FAILED } -> DownloadStatus.FAILED
+				(collectionDownloads.size == songIds.size &&
+					collectionDownloads.all { it.status == DownloadStatus.DOWNLOADED })
+					-> DownloadStatus.DOWNLOADED
+
+				else -> DownloadStatus.NOT_DOWNLOADED
+			}
+		}
+	}
+
+	fun clearAllDownloads() {
+		scope.launch(Dispatchers.IO) {
+			cancelAllActiveDownloads()
+			storageManager.clearDownloads()
+			downloadDao.clearAllDownloads()
+			Logger.i("DownloadManager", "cleared all downloads")
+		}
+	}
+
+	private suspend fun executeDownloadProcess(song: DomainSong) {
+		try {
+			Logger.i("DownloadManager", "beginning download for ${song.id}")
+			downloadDao.insertDownload(DownloadEntity(song.id, DownloadStatus.DOWNLOADING, 0f))
+
+			cacheCoverArt(song.coverArtId)
+			cacheAlbumCoverArt(song.albumId)
+			cacheLyrics(song)
+			downloadAudioFile(song)
+
+		} catch (e: Exception) {
+			if (e is CancellationException) throw e
+			Logger.e("DownloadManager", "Failed to download song ${song.id}", e)
+			downloadDao.insertDownload(DownloadEntity(song.id, DownloadStatus.FAILED, 0f))
+		} finally {
+			activeDownloadsMutex.withLock {
+				activeDownloads.remove(song.id)
+			}
+		}
+	}
+
+	private suspend fun cacheCoverArt(coverId: String?) {
+		if (coverId == null) return
+
+		Logger.i("DownloadManager", "caching cover art for $coverId")
+		val coverArtUrl = sessionManager.getCoverArtUrl(coverId)
+
+		val imageRequest = ImageRequest.Builder(coilPlatformContext)
+			.data(coverArtUrl)
+			.size(Size.ORIGINAL)
+			.memoryCacheKey(coverId)
+			.diskCacheKey(coverId)
+			.diskCachePolicy(CachePolicy.ENABLED)
+			.memoryCachePolicy(CachePolicy.DISABLED)
+			.build()
+
+		SingletonImageLoader.get(coilPlatformContext).execute(imageRequest)
+		Logger.i("DownloadManager", "cached cover art for $coverId")
+	}
+
+	private suspend fun cacheAlbumCoverArt(albumId: String?) {
+		if (albumId == null) return
+
+		try {
+			val albumWithSongs = albumDao.getAlbumById(albumId)
+			val albumCoverId = albumWithSongs?.album?.coverArtId
+
+			if (albumCoverId != null) {
+				Logger.i("DownloadManager", "Found album cover $albumCoverId for album $albumId")
+				cacheCoverArt(albumCoverId)
+			}
+		} catch (e: Exception) {
+			if (e is CancellationException) throw e
+			Logger.e("DownloadManager", "Failed to cache album cover art for album $albumId", e)
+		}
+	}
+
+	private suspend fun cacheLyrics(song: DomainSong) {
+		Logger.i("DownloadManager", "caching lyrics for ${song.id}")
+		try {
+			val lyricsResult = lyricsRepository.fetchLyrics(song)
+			if (lyricsResult != null && lyricsResult.rawContent != null) {
+				lyricDao.insertLyrics(
+					LyricEntity(
+						songId = song.id,
+						rawContent = lyricsResult.rawContent,
+						providerName = lyricsResult.providerName
+					)
+				)
+				Logger.i("DownloadManager", "cached lyrics for ${song.id}")
+			}
+		} catch (e: Exception) {
+			if (e is CancellationException) throw e
+			Logger.e("DownloadManager", "Failed to cache lyrics for ${song.id}", e)
+		}
+	}
+
+	private suspend fun downloadAudioFile(song: DomainSong) {
+		var lastProgress = 0f
+		var progressJob: Job? = null
+
+		val isCellular = connectivityManager.isCellular.value
+		val bitrate = if (preferenceManager.isAdvancedDownloadTranscodingActive) {
+			if (isCellular) preferenceManager.customDownloadMaxBitrateCellular else preferenceManager.customDownloadMaxBitrateWifi
+		} else {
+			val quality = if (isCellular) preferenceManager.downloadQualityCellular else preferenceManager.downloadQualityWifi
+			if (platformType == PlatformType.Android) quality.bitrateAndroid else quality.bitrateIos
+		}
+		val container = if (preferenceManager.isAdvancedDownloadTranscodingActive) {
+			if (isCellular) preferenceManager.customDownloadFormatCellular else preferenceManager.customDownloadFormatWifi
+		} else {
+			val quality = if (isCellular) preferenceManager.downloadQualityCellular else preferenceManager.downloadQualityWifi
+			if (platformType == PlatformType.Android) quality.containerAndroid else quality.containerIos
+		}
+
+		val extension = container?.takeIf { it.isNotBlank() } ?: song.fileExtension
+
+		val request = client.prepareRequest(
+			sessionManager.api.getStreamUrl(
+				id = song.id,
+				maxBitRate = bitrate,
+				format = container?.takeIf { it.isNotBlank() }
+			) + "&estimateContentLength=true"
+		) {
+			method = HttpMethod.Get
+			onDownload { bytesSentTotal, contentLength ->
+				if (contentLength != null && contentLength > 0L) {
+					val progress = (bytesSentTotal.toDouble() / contentLength).toFloat()
+					if (progress - lastProgress >= 0.01f || progress == 1f) {
+						lastProgress = progress
+						Logger.i("DownloadManager", "downloading ${song.id} $progress")
+
+						progressJob?.cancel()
+
+						progressJob = scope.launch {
+							downloadDao.updateProgress(
+								song.id,
+								DownloadStatus.DOWNLOADING,
+								progress
+							)
+						}
+					}
+				} else {
+					Logger.i("DownloadManager", "downloaded ${song.id}")
+				}
+			}
+		}
+
+		request.execute { response ->
+			Logger.i("DownloadManager", "writing download for ${song.id}")
+			val path = storageManager.getDownloadPath(song.id, extension)
+			storageManager.saveFile(path, response.bodyAsChannel())
+			Logger.i("DownloadManager", "wrote download for ${song.id}")
+
+			progressJob?.cancel()
+
+			downloadDao.insertDownload(
+				DownloadEntity(
+					song.id,
+					DownloadStatus.DOWNLOADED,
+					1f,
+					path
+				)
+			)
+		}
+	}
+}
