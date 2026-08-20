@@ -2,7 +2,7 @@
 
 ### What's allowed
 
-* LLM-assisted contributions are **not allowed**
+* LLM-assisted contributions are **allowed**
 * Typo contributions are **allowed**
 * Code cleaning contributions are **allowed**
 
@@ -57,7 +57,3 @@ You will need:
 	* You can use [JetBrains Toolbox](https://www.jetbrains.com/toolbox-app/) to get this
 * JDK 21
 * Android SDK matching the compile SDK declared in `gradle/libs.versions.toml`
-
-### Questions or assistance
-
-Ask in the [Discord](https://discord.gg/TBcnNX66PH) server
