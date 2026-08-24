@@ -103,7 +103,7 @@ fun AlbumListScreen(
 		bottomBar = {
 			val scrollManager = LocalBottomBarScrollManager.current
 			if (!nested || preferenceManager.bottomBarVisibilityMode == BottomBarVisibilityMode.AllScreens) {
-				RootBottomBar(scrolled = scrollManager.isTriggered)
+				RootBottomBar(scrolled = scrollManager.isTriggered, showOnExpandedWidth = true)
 			}
 		}
 	) { innerPadding ->

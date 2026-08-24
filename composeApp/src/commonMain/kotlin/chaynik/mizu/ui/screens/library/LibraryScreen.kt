@@ -143,7 +143,7 @@ fun LibraryScreen() {
 		topBar = { RootTopBar({ Text(stringResource(Res.string.title_home)) }, scrollBehavior) },
 		bottomBar = {
 			val scrollManager = LocalBottomBarScrollManager.current
-			RootBottomBar(scrolled = scrollManager.isTriggered)
+			RootBottomBar(scrolled = scrollManager.isTriggered, showOnExpandedWidth = true)
 		}
 	) { innerPadding ->
 		PullToRefreshBox(

@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.dropUnlessResumed
@@ -41,6 +42,7 @@ fun SettingsAboutScreen() {
 	val clipboard = LocalClipboardManager.current
 	val backStack = LocalNavStack.current
 	val platformContext = LocalPlatformContext.current
+	val uriHandler = LocalUriHandler.current
 	val hideBack = platformContext.sizeClass.widthSizeClass >= WindowWidthSizeClass.Medium
 	Scaffold(
 		topBar = {
@@ -74,6 +76,18 @@ fun SettingsAboutScreen() {
 					}) {
 						Text(text)
 					}
+				}
+				FormRow(onClick = dropUnlessResumed {
+					uriHandler.openUri("https://discord.gg/yMjXp6x4E5")
+				}) {
+					Text("Discord")
+					Icon(Icons.Outlined.ChevronForward, null)
+				}
+				FormRow(onClick = dropUnlessResumed {
+					uriHandler.openUri("https://github.com/chaynik-kun/mizu")
+				}) {
+					Text("GitHub")
+					Icon(Icons.Outlined.ChevronForward, null)
 				}
 			}
 			Form {

@@ -4,6 +4,7 @@ The following fonts are bundled in `composeApp/src/commonMain/composeResources/f
 and are licensed under the [SIL Open Font License 1.1](licenses/OFL-1.1.txt):
 
 - **Inter** — Copyright The Inter Project Authors (<https://github.com/rsms/inter>)
+- **Roboto** — Copyright The Roboto Project Authors (<https://github.com/googlefonts/roboto>)
 - **Manrope** — Copyright The Manrope Project Authors (<https://github.com/sharanda/manrope>)
 - **Outfit** — Copyright The Outfit Project Authors (<https://github.com/Outfitio/Outfit-Fonts>)
 - **Figtree** — Copyright The Figtree Project Authors (<https://github.com/erikdkennedy/figtree>)

@@ -41,6 +41,7 @@ import mizu.composeapp.generated.resources.nunito
 import mizu.composeapp.generated.resources.outfit
 import mizu.composeapp.generated.resources.poppins
 import mizu.composeapp.generated.resources.rubik
+import mizu.composeapp.generated.resources.roboto
 import mizu.composeapp.generated.resources.space_grotesk
 import mizu.composeapp.generated.resources.title_choose_font
 import mizu.composeapp.generated.resources.title_fonts_inbuilt
@@ -113,6 +114,7 @@ private fun LazyListScope.inbuiltFonts(
 	heading(Res.string.title_fonts_inbuilt)
 	val fonts = listOf(
 		InbuiltFont("System", FontOption.System, null),
+		InbuiltFont("Roboto", FontOption.Roboto, Res.font.roboto),
 		InbuiltFont("Inter", FontOption.Inter, Res.font.inter),
 		InbuiltFont("Manrope", FontOption.Manrope, Res.font.manrope),
 		InbuiltFont("Outfit", FontOption.Outfit, Res.font.outfit),

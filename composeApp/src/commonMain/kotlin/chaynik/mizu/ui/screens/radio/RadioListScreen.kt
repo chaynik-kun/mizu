@@ -122,7 +122,7 @@ fun RadioListScreen(
 		},
 		bottomBar = {
 			if (!nested) {
-				RootBottomBar(scrolled = scrollManager.isTriggered)
+				RootBottomBar(scrolled = scrollManager.isTriggered, showOnExpandedWidth = true)
 			}
 		}
 	) { innerPadding ->

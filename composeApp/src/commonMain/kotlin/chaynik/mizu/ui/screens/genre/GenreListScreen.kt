@@ -63,7 +63,7 @@ fun GenreListScreen(
 		bottomBar = {
 			val scrollManager = LocalBottomBarScrollManager.current
 			if (!nested) {
-				RootBottomBar(scrolled = scrollManager.isTriggered)
+				RootBottomBar(scrolled = scrollManager.isTriggered, showOnExpandedWidth = true)
 			}
 		}
 	) { innerPadding ->

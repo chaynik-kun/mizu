@@ -21,8 +21,8 @@ extensions.configure<ApplicationExtension> {
 		applicationId = "chaynik.mizu"
 		minSdk = libs.versions.android.minSdk.get().toInt()
 		targetSdk = libs.versions.android.targetSdk.get().toInt()
-		versionCode = 72
-		versionName = "1.0.0"
+		versionCode = 73
+		versionName = "1.1.0"
 
 		ndk {
 			abiFilters.addAll(listOf("arm64-v8a", "armeabi-v7a"))

@@ -2,6 +2,7 @@ package chaynik.mizu.domain.models.settings
 
 enum class FontOption(val displayName: String) {
 	System("System"),
+	Roboto("Roboto"),
 	Inter("Inter"),
 	Manrope("Manrope"),
 	Outfit("Outfit"),

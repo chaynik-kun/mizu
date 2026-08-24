@@ -94,7 +94,7 @@ fun StarredScreen() {
 		bottomBar = {
 			val scrollManager = LocalBottomBarScrollManager.current
 			if (preferenceManager.bottomBarVisibilityMode == BottomBarVisibilityMode.AllScreens) {
-				RootBottomBar(scrolled = scrollManager.isTriggered)
+				RootBottomBar(scrolled = scrollManager.isTriggered, showOnExpandedWidth = true)
 			}
 		}
 	) { innerPadding ->

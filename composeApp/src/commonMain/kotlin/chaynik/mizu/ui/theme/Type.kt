@@ -15,6 +15,7 @@ import mizu.composeapp.generated.resources.nunito
 import mizu.composeapp.generated.resources.outfit
 import mizu.composeapp.generated.resources.poppins
 import mizu.composeapp.generated.resources.rubik
+import mizu.composeapp.generated.resources.roboto
 import mizu.composeapp.generated.resources.space_grotesk
 import mizu.composeapp.generated.resources.urbanist
 import mizu.composeapp.generated.resources.dm_sans
@@ -46,6 +47,7 @@ fun defaultFont(
 	val preferenceManager = koinInject<PreferenceManager>()
 	return when (preferenceManager.font) {
 		FontOption.System -> FontFamily.Default
+		FontOption.Roboto -> bundledFont(Res.font.roboto)
 		FontOption.Inter -> bundledFont(Res.font.inter)
 		FontOption.Manrope -> bundledFont(Res.font.manrope)
 		FontOption.Outfit -> bundledFont(Res.font.outfit)

@@ -162,7 +162,7 @@ fun PlaylistListScreen(
 		},
 		bottomBar = {
 			if (!nested || preferenceManager.bottomBarVisibilityMode == BottomBarVisibilityMode.AllScreens) {
-				RootBottomBar(scrolled = scrollManager.isTriggered)
+				RootBottomBar(scrolled = scrollManager.isTriggered, showOnExpandedWidth = true)
 			}
 		}
 	) { innerPadding ->

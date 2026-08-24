@@ -61,7 +61,7 @@ fun LibraryHubScreen() {
 		topBar = { RootTopBar({ Text(stringResource(Res.string.title_library)) }, scrollBehavior) },
 		bottomBar = {
 			val scrollManager = LocalBottomBarScrollManager.current
-			RootBottomBar(scrolled = scrollManager.isTriggered)
+			RootBottomBar(scrolled = scrollManager.isTriggered, showOnExpandedWidth = true)
 		}
 	) { innerPadding ->
 		BoxWithConstraints(

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarDefaults
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -17,6 +18,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import org.koin.compose.koinInject
 import chaynik.mizu.domain.manager.PreferenceManager
 import chaynik.mizu.domain.models.settings.BottomBarCollapseMode
+import chaynik.mizu.LocalPlatformContext
 import chaynik.mizu.util.ui.easedVerticalGradient
 
 @Composable
@@ -26,7 +28,12 @@ fun RootBottomBar(
 	shadows: Boolean = true,
 	hideMiniPlayer: Boolean = false,
 	bottomBarWindowInsets: WindowInsets = NavigationBarDefaults.windowInsets,
+	showOnExpandedWidth: Boolean = false,
 ) {
+	if (!showOnExpandedWidth &&
+		LocalPlatformContext.current.sizeClass.widthSizeClass > WindowWidthSizeClass.Compact
+	) return
+
 	val preferenceManager = koinInject<PreferenceManager>()
 	val scrolled =
 		scrolled && preferenceManager.bottomBarCollapseMode == BottomBarCollapseMode.OnScroll
