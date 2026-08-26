@@ -12,8 +12,6 @@ Mizu is an open-source music player for Android, focused on a clean interface, r
 
 Discord server: https://discord.gg/yMjXp6x4E5
 
-Google Play Testing: https://play.google.com/apps/internaltest/4700871915708450273
-
 ## Features
 
 * 🎵 Navidrome / OpenSubsonic-compatible server support
