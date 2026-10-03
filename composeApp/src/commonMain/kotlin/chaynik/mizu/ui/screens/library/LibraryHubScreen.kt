@@ -1,7 +1,7 @@
 package chaynik.mizu.ui.screens.library
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -18,6 +18,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -38,6 +39,7 @@ import mizu.composeapp.generated.resources.title_track_artists
 import org.jetbrains.compose.resources.stringResource
 import chaynik.mizu.LocalBottomBarScrollManager
 import chaynik.mizu.LocalNavStack
+import chaynik.mizu.LocalPlatformContext
 import chaynik.mizu.domain.models.DomainAlbumListType
 import chaynik.mizu.domain.models.DomainArtistListType
 import chaynik.mizu.domain.models.DomainSongListType
@@ -55,8 +57,9 @@ import chaynik.mizu.ui.navigation.Screen
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LibraryHubScreen() {
-	val backStack = LocalNavStack.current
 	val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+	val singleColumn =
+		LocalPlatformContext.current.sizeClass.widthSizeClass <= WindowWidthSizeClass.Compact
 	Scaffold(
 		topBar = { RootTopBar({ Text(stringResource(Res.string.title_library)) }, scrollBehavior) },
 		bottomBar = {
@@ -64,12 +67,11 @@ fun LibraryHubScreen() {
 			RootBottomBar(scrolled = scrollManager.isTriggered, showOnExpandedWidth = true)
 		}
 	) { innerPadding ->
-		BoxWithConstraints(
+		Box(
 			modifier = Modifier
 				.fillMaxSize()
 				.padding(top = innerPadding.calculateTopPadding())
 		) {
-			val singleColumn = maxWidth < 400.dp
 			Column(
 				modifier = Modifier
 					.fillMaxSize()
