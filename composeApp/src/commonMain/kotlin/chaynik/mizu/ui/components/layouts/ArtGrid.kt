@@ -52,6 +52,7 @@ fun ArtGrid(
 	contentPadding: PaddingValues,
 	horizontalArrangement: Arrangement.Horizontal = Arrangement.spacedBy(12.dp),
 	verticalArrangement: Arrangement.Vertical = Arrangement.spacedBy(12.dp),
+	columns: GridCells? = null,
 	content: LazyGridScope.() -> Unit
 ) {
 	val platformContext = LocalPlatformContext.current
@@ -60,7 +61,7 @@ fun ArtGrid(
 	LazyVerticalGrid(
 		modifier = modifier.fillMaxSize(),
 		state = state,
-		columns = if (platformContext.sizeClass.widthSizeClass <= WindowWidthSizeClass.Compact)
+		columns = columns ?: if (platformContext.sizeClass.widthSizeClass <= WindowWidthSizeClass.Compact)
 			GridCells.Fixed(preferenceManager.gridSize.value)
 		else GridCells.Adaptive(artGridItemSize.dp),
 		contentPadding = contentPadding + PaddingValues(

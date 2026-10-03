@@ -11,6 +11,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -140,6 +141,7 @@ fun RadioListScreen(
 				else Modifier,
 				contentPadding = innerPadding.withoutTop(),
 				state = viewModel.gridState,
+				columns = GridCells.Fixed(2),
 				verticalArrangement = if ((radiosState as? UiState.Success)?.data?.isEmpty() == true)
 					Arrangement.Center
 				else Arrangement.spacedBy(12.dp)
