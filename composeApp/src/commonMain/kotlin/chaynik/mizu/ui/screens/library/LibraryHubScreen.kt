@@ -1,7 +1,7 @@
 package chaynik.mizu.ui.screens.library
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -63,16 +63,11 @@ fun LibraryHubScreen() {
 			RootBottomBar(scrolled = scrollManager.isTriggered, showOnExpandedWidth = true)
 		}
 	) { innerPadding ->
-		BoxWithConstraints(
+		Box(
 			modifier = Modifier
 				.fillMaxSize()
 				.padding(top = innerPadding.calculateTopPadding())
 		) {
-			// Two buttons side by side need roughly 180dp each to keep their
-			// labels readable, so only collapse to one column when the content
-			// genuinely cannot fit a pair. A phone in portrait is ~390dp wide,
-			// which still fits.
-			val singleColumn = maxWidth < 340.dp
 			Column(
 				modifier = Modifier
 					.fillMaxSize()
@@ -82,23 +77,19 @@ fun LibraryHubScreen() {
 			) {
 				LibraryButtonRow(
 					LibraryButtonData(Res.string.title_albums, Icons.Filled.Album, Screen.AlbumList(true)),
-					LibraryButtonData(Res.string.title_album_artists, Icons.Filled.Artist, Screen.ArtistList(true)),
-					singleColumn
+					LibraryButtonData(Res.string.title_album_artists, Icons.Filled.Artist, Screen.ArtistList(true))
 				)
 				LibraryButtonRow(
 					LibraryButtonData(Res.string.title_songs, Icons.Filled.Note, Screen.SongList(true)),
-					LibraryButtonData(Res.string.title_track_artists, Icons.Filled.Artist, Screen.LibraryPeople(Screen.LibraryPeopleType.TRACK_ARTISTS)),
-					singleColumn
+					LibraryButtonData(Res.string.title_track_artists, Icons.Filled.Artist, Screen.LibraryPeople(Screen.LibraryPeopleType.TRACK_ARTISTS))
 				)
 				LibraryButtonRow(
 					LibraryButtonData(Res.string.title_genres, Icons.Filled.Genre, Screen.GenreList(true)),
-					LibraryButtonData(Res.string.title_composers, Icons.Outlined.Badge, Screen.LibraryPeople(Screen.LibraryPeopleType.COMPOSERS)),
-					singleColumn
+					LibraryButtonData(Res.string.title_composers, Icons.Outlined.Badge, Screen.LibraryPeople(Screen.LibraryPeopleType.COMPOSERS))
 				)
 				LibraryButtonRow(
 					LibraryButtonData(Res.string.title_random_tracks, Icons.Filled.ShuffleOn, Screen.SongList(true, DomainSongListType.Random), accent = true),
-					LibraryButtonData(Res.string.title_random_albums, Icons.Filled.ShuffleOn, Screen.AlbumList(true, DomainAlbumListType.Random), accent = true),
-					singleColumn
+					LibraryButtonData(Res.string.title_random_albums, Icons.Filled.ShuffleOn, Screen.AlbumList(true, DomainAlbumListType.Random), accent = true)
 				)
 			}
 		}
@@ -113,17 +104,10 @@ private data class LibraryButtonData(
 )
 
 @Composable
-private fun LibraryButtonRow(first: LibraryButtonData, second: LibraryButtonData, singleColumn: Boolean) {
-	if (singleColumn) {
-		Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-			LibraryButton(first, Modifier.fillMaxWidth())
-			LibraryButton(second, Modifier.fillMaxWidth())
-		}
-	} else {
-		Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-			LibraryButton(first, Modifier.weight(1f))
-			LibraryButton(second, Modifier.weight(1f))
-		}
+private fun LibraryButtonRow(first: LibraryButtonData, second: LibraryButtonData) {
+	Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+		LibraryButton(first, Modifier.weight(1f))
+		LibraryButton(second, Modifier.weight(1f))
 	}
 }
 
