@@ -71,7 +71,6 @@ import chaynik.mizu.util.ui.withoutTop
 import org.koin.compose.koinInject
 import chaynik.mizu.LocalNavStack
 import chaynik.mizu.LocalPlatformContext
-import kotlin.math.max
 
 
 internal data class HomeRandomTracks<T>(val preview: List<T>, val playbackQueue: List<T>)
@@ -140,7 +139,7 @@ fun LibraryScreenContent(
 	val platformContext = LocalPlatformContext.current
 	val adaptive = platformContext.sizeClass.widthSizeClass > WindowWidthSizeClass.Compact
 	val gridItemSize = preferences.artGridItemSize
-	val cardWidth: Dp = if (adaptive) max(gridItemSize.dp, 150.dp) else 150.dp
+	val cardWidth: Dp = if (adaptive && gridItemSize.dp > 150.dp) gridItemSize.dp else 150.dp
 	val radioCardWidth: Dp = if (adaptive) cardWidth + 20.dp else 170.dp
 	val albumSectionLimit = if (adaptive) 20 else 10
 	val randomTracks = homeRandomTracks(randomSongsState.data.orEmpty())
