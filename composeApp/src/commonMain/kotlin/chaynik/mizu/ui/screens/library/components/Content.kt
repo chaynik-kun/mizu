@@ -2,8 +2,10 @@ package chaynik.mizu.ui.screens.library.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -23,12 +25,14 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.ImmutableList
 import mizu.composeapp.generated.resources.Res
@@ -66,6 +70,9 @@ import chaynik.mizu.ui.screens.playlist.components.PlaylistListScreenItem
 import chaynik.mizu.util.ui.withoutTop
 import org.koin.compose.koinInject
 import chaynik.mizu.LocalNavStack
+import chaynik.mizu.LocalPlatformContext
+import kotlin.math.max
+
 
 internal data class HomeRandomTracks<T>(val preview: List<T>, val playbackQueue: List<T>)
 
@@ -130,10 +137,16 @@ fun LibraryScreenContent(
 	val hiddenSections = preferences.homeHiddenSections.split(',').toSet()
 	val homeSections = HomeSection.decode(preferences.homeSectionOrder)
 		.filter { it.name !in hiddenSections }
+	val platformContext = LocalPlatformContext.current
+	val adaptive = platformContext.sizeClass.widthSizeClass > WindowWidthSizeClass.Compact
+	val gridItemSize = preferences.artGridItemSize
+	val cardWidth: Dp = if (adaptive) max(gridItemSize.dp, 150.dp) else 150.dp
+	val radioCardWidth: Dp = if (adaptive) cardWidth + 20.dp else 170.dp
+	val albumSectionLimit = if (adaptive) 20 else 10
 	val randomTracks = homeRandomTracks(randomSongsState.data.orEmpty())
 	LazyVerticalGrid(
 		modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-		columns = GridCells.Fixed(2),
+		columns = if (adaptive) GridCells.Adaptive(gridItemSize.dp) else GridCells.Fixed(2),
 		contentPadding = innerPadding.withoutTop() + PaddingValues(top = 8.dp),
 		verticalArrangement = Arrangement.spacedBy(5.dp),
 		horizontalArrangement = Arrangement.spacedBy(5.dp),
@@ -148,30 +161,33 @@ fun LibraryScreenContent(
 			sectionKey = section.name
 		)
 		item(key = "${section.name}:content", span = { GridItemSpan(maxLineSpan) }) {
-			LazyHorizontalGrid(
-				rows = GridCells.Fixed(3),
-				modifier = Modifier.fillMaxWidth().height(216.dp),
-				contentPadding = PaddingValues(horizontal = 8.dp),
-				horizontalArrangement = Arrangement.spacedBy(8.dp)
-			) {
-				items(
-					items = randomTracks.preview,
-					key = { it.id }
-				) { song ->
-						ListItem(
-						modifier = Modifier.width(320.dp),
-						onClick = {
-							onPlayRandomSongs(randomTracks.playbackQueue, randomTracks.playbackQueue.indexOf(song))
-						},
-						leadingContent = {
-							CoverArt(
-								coverArtId = song.coverArtId,
-								modifier = Modifier.size(54.dp)
-							)
-						},
-						content = { Text(song.title, maxLines = 1) },
-						supportingContent = { Text(song.artistName, maxLines = 1) }
-					)
+			BoxWithConstraints {
+				val songCardWidth = if (maxWidth < 480.dp) maxWidth else maxWidth / 2 - 4.dp
+				LazyHorizontalGrid(
+					rows = GridCells.Fixed(3),
+					modifier = Modifier.fillMaxWidth().height(216.dp),
+					contentPadding = PaddingValues(horizontal = 8.dp),
+					horizontalArrangement = Arrangement.spacedBy(8.dp)
+				) {
+					items(
+						items = randomTracks.preview,
+						key = { it.id }
+					) { song ->
+							ListItem(
+							modifier = Modifier.width(songCardWidth),
+							onClick = {
+								onPlayRandomSongs(randomTracks.playbackQueue, randomTracks.playbackQueue.indexOf(song))
+							},
+							leadingContent = {
+								CoverArt(
+									coverArtId = song.coverArtId,
+									modifier = Modifier.size(54.dp)
+								)
+							},
+							content = { Text(song.title, maxLines = 1) },
+							supportingContent = { Text(song.artistName, maxLines = 1) }
+						)
+					}
 				}
 			}
 		}
@@ -183,10 +199,11 @@ fun LibraryScreenContent(
 			destination = Screen.AlbumList(true, DomainAlbumListType.Newest),
 			state = albumsState,
 			key = { it.id },
-			seeAll = true
+			seeAll = true,
+			cardWidth = cardWidth
 		) { album ->
 			AlbumListScreenItem(
-				modifier = Modifier.animateItem().width(150.dp),
+				modifier = Modifier.animateItem().width(cardWidth),
 				tab = "library",
 				album = album,
 				selected = album == selectedAlbum,
@@ -202,11 +219,11 @@ fun LibraryScreenContent(
 			)
 		}
 				}
-				HomeSection.NewReleases -> homeAlbumSection(section.title, DomainAlbumListType.Year, releaseAlbumsState)
-				HomeSection.RecentlyPlayed -> homeAlbumSection(section.title, DomainAlbumListType.Recent, recentAlbumsState)
-				HomeSection.RandomAlbums -> homeAlbumSection(section.title, DomainAlbumListType.Random, randomAlbumsState)
-				HomeSection.FrequentlyPlayed -> homeAlbumSection(section.title, DomainAlbumListType.Frequent, frequentAlbumsState)
-				HomeSection.FavoriteAlbums -> homeAlbumSection(section.title, DomainAlbumListType.Starred, favoriteAlbumsState)
+				HomeSection.NewReleases -> homeAlbumSection(section.title, DomainAlbumListType.Year, releaseAlbumsState, cardWidth, albumSectionLimit)
+				HomeSection.RecentlyPlayed -> homeAlbumSection(section.title, DomainAlbumListType.Recent, recentAlbumsState, cardWidth, albumSectionLimit)
+				HomeSection.RandomAlbums -> homeAlbumSection(section.title, DomainAlbumListType.Random, randomAlbumsState, cardWidth, albumSectionLimit)
+				HomeSection.FrequentlyPlayed -> homeAlbumSection(section.title, DomainAlbumListType.Frequent, frequentAlbumsState, cardWidth, albumSectionLimit)
+				HomeSection.FavoriteAlbums -> homeAlbumSection(section.title, DomainAlbumListType.Starred, favoriteAlbumsState, cardWidth, albumSectionLimit)
 				HomeSection.FavoriteArtists -> homeDestinationRow(
 					section.title,
 					Screen.ArtistList(true, DomainArtistListType.Starred)
@@ -226,7 +243,7 @@ fun LibraryScreenContent(
 						) {
 							items(radios, key = { it.id }) { radio ->
 								RadioListScreenCard(
-									modifier = Modifier.width(170.dp),
+									modifier = Modifier.width(radioCardWidth),
 									radio = radio,
 									onPlayClick = { player.playRadio(radio) }
 								)
@@ -241,10 +258,11 @@ fun LibraryScreenContent(
 			destination = Screen.PlaylistList(true),
 			state = playlistsState,
 			key = { it.id },
-			seeAll = true
+			seeAll = true,
+			cardWidth = cardWidth
 		) { playlist ->
 			PlaylistListScreenItem(
-				modifier = Modifier.animateItem().width(150.dp),
+				modifier = Modifier.animateItem().width(cardWidth),
 				tab = "library",
 				playlist = playlist,
 				selected = playlist == selectedPlaylist,
@@ -264,10 +282,11 @@ fun LibraryScreenContent(
 			destination = Screen.ArtistList(true),
 			state = artistsState,
 			key = { it.id },
-			seeAll = true
+			seeAll = true,
+			cardWidth = cardWidth
 		) { artist ->
 			ArtistsScreenItem(
-				modifier = Modifier.animateItem().width(150.dp),
+				modifier = Modifier.animateItem().width(cardWidth),
 				tab = "library",
 				artist = artist,
 				selected = artist == selectedArtist,
@@ -301,7 +320,9 @@ fun LibraryScreenContent(
 private fun androidx.compose.foundation.lazy.grid.LazyGridScope.homeAlbumSection(
 	title: StringResource,
 	listType: DomainAlbumListType,
-	state: UiState<ImmutableList<DomainAlbum>>
+	state: UiState<ImmutableList<DomainAlbum>>,
+	cardWidth: Dp = 150.dp,
+	limit: Int = 10
 ) {
 	header(title, destination = Screen.AlbumList(true, listType), active = true, sectionKey = listType)
 	item(key = "$listType:content", span = { GridItemSpan(maxLineSpan) }) {
@@ -310,14 +331,14 @@ private fun androidx.compose.foundation.lazy.grid.LazyGridScope.homeAlbumSection
 			contentPadding = PaddingValues(horizontal = 16.dp),
 			horizontalArrangement = Arrangement.spacedBy(12.dp)
 		) {
-			items(state.data.orEmpty().take(10), key = { it.id }) { album ->
+			items(state.data.orEmpty().take(limit), key = { it.id }) { album ->
 				Column(
-					modifier = Modifier.width(150.dp).clickable {
+					modifier = Modifier.width(cardWidth).clickable {
 						backStack.add(Screen.CollectionDetail(album.id, "home"))
 					}
 				) {
 					CoverArt(
-						modifier = Modifier.fillMaxWidth().height(150.dp),
+						modifier = Modifier.fillMaxWidth().aspectRatio(1f),
 						coverArtId = album.coverArtId
 					)
 					Text(

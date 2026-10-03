@@ -4,6 +4,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -16,11 +17,13 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.dropUnlessResumed
@@ -40,6 +43,8 @@ fun <T> LazyGridScope.horizontalSection(
 	destination: NavKey,
 	state: UiState<List<T>>,
 	key: (T) -> Any,
+	/** Width of a single card in this section. Defaults to the compact 150.dp. */
+	cardWidth: Dp = 150.dp,
 	itemContent: @Composable LazyItemScope.(T) -> Unit,
 ) {
 	val data = state.data.orEmpty()
@@ -57,7 +62,7 @@ fun <T> LazyGridScope.horizontalSection(
 		) {
 			if (state is UiState.Loading && data.isEmpty()) {
 				items(8) {
-					ArtGridPlaceholder(Modifier.width(150.dp))
+					ArtGridPlaceholder(Modifier.width(cardWidth))
 				}
 			} else {
 				items(data, key = key) { item ->
@@ -74,38 +79,42 @@ fun LazyGridScope.header(
 	vararg formatArgs: Any,
 	destination: NavKey,
 	active: Boolean,
-	sectionKey: Any = title
+	sectionKey: Any = title,
+	/** When true (e.g. adaptive grids wider than two columns), the "see all"
+	 *  action shares the full-width title line instead of occupying its own cell. */
+	inlineAction: Boolean = true
 ) {
-	item(key = "$sectionKey:title", span = { GridItemSpan(1) }) {
-		Text(
-			stringResource(title, formatArgs),
-			style = MaterialTheme.typography.titleMediumEmphasized,
-			fontWeight = FontWeight(600),
+	item(key = "$sectionKey:title", span = { GridItemSpan(if (active && inlineAction) maxLineSpan else 1) }) {
+		val backStack = LocalNavStack.current
+		Row(
 			modifier = Modifier
 				.heightIn(min = 32.dp)
-				.padding(top = 12.dp, start = 16.dp)
-				.semantics { heading() }
-		)
-	}
-	if (active) {
-		item(key = "$sectionKey:action", span = { GridItemSpan(1) }) {
-			val backStack = LocalNavStack.current
+				.padding(top = 12.dp, start = 16.dp, end = 16.dp),
+			verticalAlignment = Alignment.CenterVertically
+		) {
 			Text(
-				stringResource(Res.string.action_see_all),
-				fontSize = 12.sp,
-				color = MaterialTheme.colorScheme.primary,
-				textAlign = TextAlign.End,
+				stringResource(title, formatArgs),
+				style = MaterialTheme.typography.titleMediumEmphasized,
+				fontWeight = FontWeight(600),
 				modifier = Modifier
-					.heightIn(min = 32.dp)
-					.padding(top = 12.dp, end = 16.dp)
-					.clickable(
+					.weight(1f)
+					.semantics { heading() }
+			)
+			if (active) {
+				Text(
+					stringResource(Res.string.action_see_all),
+					fontSize = 12.sp,
+					color = MaterialTheme.colorScheme.primary,
+					textAlign = TextAlign.End,
+					modifier = Modifier.clickable(
 						interactionSource = null,
 						indication = null,
 						onClick = dropUnlessResumed {
-					    	backStack.add(destination)
-					    }
+							backStack.add(destination)
+						}
 					)
-			)
+				)
+			}
 		}
 	}
 }
