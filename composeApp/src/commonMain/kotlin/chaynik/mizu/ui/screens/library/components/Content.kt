@@ -140,7 +140,7 @@ fun LibraryScreenContent(
 	val adaptive = platformContext.sizeClass.widthSizeClass > WindowWidthSizeClass.Compact
 	val gridItemSize = preferences.artGridItemSize
 	val cardWidth: Dp = if (adaptive && gridItemSize.dp > 150.dp) gridItemSize.dp else 150.dp
-	val radioCardWidth: Dp = if (adaptive) cardWidth + 20.dp else 170.dp
+	val radioCardWidth: Dp = if (adaptive) cardWidth + 20.dp else 200.dp
 	val albumSectionLimit = if (adaptive) 20 else 10
 	val randomTracks = homeRandomTracks(randomSongsState.data.orEmpty())
 	LazyVerticalGrid(
