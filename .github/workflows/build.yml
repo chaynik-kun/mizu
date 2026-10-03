@@ -61,7 +61,7 @@ jobs:
 
       - name: Build with Gradle (debug)
         id: build_debug
-        if: github.event_name == 'pull_request'
+        if: github.event_name != 'tag' && env.SIGNING_KEY_ALIAS == ''
         run: |
           ./gradlew :androidApp:assembleDebug --stacktrace
 
